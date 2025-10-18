@@ -1,0 +1,9 @@
+{
+  "upstream_repository_name": "upstream",
+  "upstream_branch_name": "main",
+  "last_merged_upstream_commit": "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0",
+  "custom_code_marker": {
+    "start": "// CUSTOM-CODE-START",
+    "end": "// CUSTOM-CODE-END"
+  }
+}
