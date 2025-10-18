@@ -37,7 +37,10 @@ export class GitService {
       const fullBranchName = `${remoteName}/${branchName}`;
       this.logger.info(`Starting merge with: ${fullBranchName}`);
 
-      const result = await this.exec(`git merge ${fullBranchName}`);
+      // Use --allow-unrelated-histories to handle cases where upstream and local have different histories
+      const result = await this.exec(
+        `git merge ${fullBranchName} --allow-unrelated-histories`
+      );
 
       // Check if merge succeeded (exit code 0) or failed with conflicts (exit code 1)
       if (result.exitCode === 0) {

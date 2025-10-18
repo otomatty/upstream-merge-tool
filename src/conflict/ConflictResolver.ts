@@ -207,8 +207,14 @@ export class ConflictResolver {
   /**
    * Part 3: Resolve a single conflict by removing conflict markers
    * Keeps the "ours" (our custom code) side and removes conflict markers
+   * Also removes custom code markers if present
    */
-  async resolveConflict(filePath: string, marker: ConflictMarker): Promise<void> {
+  async resolveConflict(
+    filePath: string,
+    marker: ConflictMarker,
+    startMarker?: string,
+    endMarker?: string
+  ): Promise<void> {
     try {
       this.logger.info(`Resolving conflict in: ${filePath}`);
 
@@ -216,7 +222,12 @@ export class ConflictResolver {
       const fileContent = await readFileAsText(filePath);
 
       // Remove conflict markers
-      const resolvedContent = this.removeConflictMarkers(fileContent, marker);
+      let resolvedContent = this.removeConflictMarkers(fileContent, marker);
+
+      // Remove custom code markers if provided
+      if (startMarker && endMarker) {
+        resolvedContent = this.removeCustomCodeMarkers(resolvedContent, startMarker, endMarker);
+      }
 
       // Write resolved content back
       await writeFile(filePath, resolvedContent);
@@ -258,10 +269,46 @@ export class ConflictResolver {
   }
 
   /**
+   * Remove custom code markers from content
+   * Removes lines containing custom code start and end markers
+   */
+  private removeCustomCodeMarkers(content: string, startMarker: string, endMarker: string): string {
+    const lines = content.split('\n');
+    const result: string[] = [];
+
+    let insideMarker = false;
+
+    for (const line of lines) {
+      if (line.includes(startMarker)) {
+        insideMarker = true;
+        // Skip the start marker line
+        continue;
+      }
+
+      if (line.includes(endMarker)) {
+        insideMarker = false;
+        // Skip the end marker line
+        continue;
+      }
+
+      if (!insideMarker) {
+        result.push(line);
+      }
+    }
+
+    return result.join('\n');
+  }
+
+  /**
    * Part 3: Resolve multiple conflicts in a file
    * Returns true if all conflicts were resolved
+   * Also removes custom code markers after resolving conflicts
    */
-  async resolveAllConflictsInFile(filePath: string): Promise<boolean> {
+  async resolveAllConflictsInFile(
+    filePath: string,
+    startMarker?: string,
+    endMarker?: string
+  ): Promise<boolean> {
     try {
       this.logger.info(`Resolving all conflicts in: ${filePath}`);
 
@@ -273,8 +320,7 @@ export class ConflictResolver {
       }
 
       // Read file once for all resolutions
-      const fileContent = await readFileAsText(filePath);
-      let resolvedContent = fileContent;
+      let resolvedContent = await readFileAsText(filePath);
 
       // Process conflicts in reverse order to maintain line numbers
       for (let i = conflicts.length - 1; i >= 0; i--) {
@@ -282,6 +328,11 @@ export class ConflictResolver {
         if (marker) {
           resolvedContent = this.removeConflictMarkers(resolvedContent, marker);
         }
+      }
+
+      // Remove custom code markers if provided
+      if (startMarker && endMarker) {
+        resolvedContent = this.removeCustomCodeMarkers(resolvedContent, startMarker, endMarker);
       }
 
       // Write resolved content

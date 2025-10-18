@@ -124,8 +124,12 @@ async function main(): Promise<void> {
           }
 
           if (canResolveFile) {
-            // Resolve all conflicts in the file
-            await conflictResolver.resolveAllConflictsInFile(filePath);
+            // Resolve all conflicts in the file and remove custom code markers
+            await conflictResolver.resolveAllConflictsInFile(
+              filePath,
+              config.custom_code_marker.start,
+              config.custom_code_marker.end
+            );
             await gitService.add(filePath);
             autoResolvedFiles.push(filePath);
             logger.info('✓ Auto-resolved: ' + filePath);

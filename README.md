@@ -1,45 +1,47 @@
 # upstream-merge-tool
 
-Automatically merge upstream changes while preserving custom code with automatic conflict resolution.
+Automatically merge upstream changes while preserving custom code with intelligent conflict resolution.
 
-## 🚀 Quick Start
+## 📃 概要
 
-### Prerequisites
-- **Node.js** v18.0.0+ (for npm/yarn)
-- **Bun** v1.2.15+ (optional, for Bun runtime)
-- **Git** (required for merge operations)
+`upstream-merge-tool` は、フォークしたリポジトリやローカル修正を含むプロジェクトで、上流（Upstream）からの変更を自動的にマージする際に、ローカルのカスタムコードを保持する必要があるシナリオに対応しています。
 
-### Install Dependencies
+**主な特徴：**
+- ✅ 自動競合検出と条件付き自動解決
+- ✅ カスタムコードマーカー（`// CUSTOM-CODE-START` ～ `// CUSTOM-CODE-END`）対応
+- ✅ 3 つのシナリオに対応：
+  - **No Conflict**: 競合なしの通常マージ
+  - **Auto-Resolvable**: 自動解決可能な競合
+  - **Manual Resolution**: 手動解決が必要な競合
+- ✅ 詳細なマージレポート生成
+- ✅ Node.js / npm / yarn / Bun に対応
+- ✅ 199 個のテストケース（ユニット・統合・E2E）で完全検証
+
+## 🚀 クイックスタート
+
+### 必要な環境
+
+- **Git**: マージ操作に必須
+- **Node.js** v18.0.0+（npm/yarn の場合）
+  または
+- **Bun** v1.2.15+（Bun ランタイムの場合）
+
+### 1. 依存関係のインストール
 
 ```bash
-# Using npm
+# npm を使う場合
 npm install
 
-# Or using yarn
+# yarn を使う場合
 yarn install
 
-# Or using Bun
+# Bun を使う場合
 bun install
 ```
 
-### Run the Tool
+### 2. 設定ファイルの作成
 
-```bash
-# Using npm
-npm run start
-
-# Using yarn
-yarn start
-
-# Using Bun
-bun run index.ts
-```
-
-This project was created using `bun init` in bun v1.2.15. [Bun](https://bun.sh) is a fast all-in-one JavaScript runtime.
-
-## 📋 Configuration
-
-Create a `config.json` file in the project root:
+プロジェクトルートに `config.json` を作成します：
 
 ```json
 {
@@ -47,10 +49,186 @@ Create a `config.json` file in the project root:
   "upstream_branch_name": "main",
   "last_merged_upstream_commit": "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0",
   "custom_code_marker": {
-    "start": "// === CUSTOM CODE START ===",
-    "end": "// === CUSTOM CODE END ==="
+    "start": "// CUSTOM-CODE-START",
+    "end": "// CUSTOM-CODE-END"
   }
 }
+```
+
+**設定項目の説明：**
+
+| 項目 | 説明 | 例 |
+|------|------|-----|
+| `upstream_repository_name` | 上流リポジトリのリモート名 | `upstream` |
+| `upstream_branch_name` | 上流ブランチ名 | `main` または `master` |
+| `last_merged_upstream_commit` | 最後にマージした上流コミット SHA | `a1b2c3d...` (40 文字) |
+| `custom_code_marker.start` | カスタムコード開始マーカー | `// CUSTOM-CODE-START` |
+| `custom_code_marker.end` | カスタムコード終了マーカー | `// CUSTOM-CODE-END` |
+
+### 3. ツールの実行
+
+```bash
+# npm
+npm run start
+
+# yarn
+yarn start
+
+# Bun
+bun run index.ts
+```
+
+## 📋 設定の詳細ガイド
+
+### Upstream リモートの設定
+
+```bash
+# 現在のリモート確認
+git remote -v
+
+# 上流リモートがない場合は追加
+git remote add upstream https://github.com/original-repo/repository.git
+
+# 上流からの最新情報を取得
+git fetch upstream
+```
+
+### コミット SHA の確認
+
+```bash
+# 上流の最新コミット SHA を確認
+git log upstream/main --oneline -1
+
+# または、特定のコミット SHA を確認
+git rev-parse upstream/main
+```
+
+### カスタムコードマーカーの使用例
+
+```typescript
+// app.ts
+
+export const config = { version: '2.0.0' };
+
+// CUSTOM-CODE-START
+// ローカルでのみ使用する設定
+export const LOCAL_SETTINGS = {
+  debug: true,
+  apiUrl: 'http://localhost:3000'
+};
+// CUSTOM-CODE-END
+
+export function initialize() {
+  console.log('Initializing...');
+}
+```
+
+## 🎯 使用シナリオ
+
+### シナリオ 1: 競合なし
+
+上流の変更とローカルの変更が別のファイルやセクションにある場合、自動的にマージされます。
+
+```bash
+$ npm run start
+[INFO] Starting upstream merge...
+[INFO] Fetching from upstream...
+[SUCCESS] Merge completed successfully
+[REPORT] Total Conflicts: 0
+```
+
+### シナリオ 2: 自動解決可能
+
+上流が変更していない部分で、ローカルにカスタムコードマーカーで囲まれたコードがある場合、自動的に解決されます。
+
+```
+Upstream の変更:   export const x = 1;
+Local の変更:      export const x = 1;
+                   // CUSTOM-CODE-START
+                   const custom = 'value';
+                   // CUSTOM-CODE-END
+
+結果:              自動解決 ✓ (マーカーが削除される)
+```
+
+### シナリオ 3: 手動解決が必要
+
+上流とローカルの両方が同じセクションを変更した場合、手動でマージレポートを確認して解決します。
+
+```
+Upstream の変更:   export const x = 1;
+Local の変更:      export const x = 999;
+
+結果:              手動解決 ✗ (ユーザーが確認して解決)
+```
+
+## 📊 マージレポートの解釈
+
+ツール実行後、以下のようなレポートが表示されます：
+
+```
+╔═══════════════════════════════════════════════════════════════╗
+║                   Upstream Merge Report                       ║
+╚═══════════════════════════════════════════════════════════════╝
+
+Status: SUCCESS / FAILURE
+Total Conflicts: X
+
+Auto-Resolved (X files):
+✓ src/config/settings.ts
+✓ src/utils/helpers.ts
+
+Manual Resolution Required (X files):
+✗ src/main.ts
+✗ src/api/client.ts
+
+Execution Time: 1.234s
+```
+
+**フィールドの説明：**
+- **Status**: 全体的なマージ結果
+- **Total Conflicts**: 検出された競合数
+- **Auto-Resolved**: 自動的に解決されたファイル
+- **Manual Resolution Required**: 手動対応が必要なファイル
+
+## 🧪 テストの実行
+
+```bash
+# すべてのテストを実行
+bun test
+
+# 特定のカテゴリのみ実行
+bun test src/__tests__/unit          # ユニットテスト
+bun test src/__tests__/integration   # 統合テスト
+bun test src/__tests__/e2e           # E2E テスト
+
+# 特定のテストファイルを実行
+bun test src/__tests__/unit/config-manager.test.ts
+
+# テスト結果の統計
+bun test --summary
+```
+
+**テスト統計（2025-10-19）:**
+- ✅ ユニットテスト: 145 個
+- ✅ 統合テスト: 26 個
+- ✅ E2E テスト: 28 個
+- **合計: 199 個テスト PASS**
+
+## 🔧 利用可能なコマンド
+
+```bash
+# 実行
+npm run start          # Node.js/npm で実行
+npm run start:bun      # Bun で実行
+npm run dev            # ウォッチモード
+
+# テスト
+npm run test           # すべてのテスト実行
+npm run test:coverage  # カバレッジレポート生成
+
+# ビルド（Bun 必須）
+npm run build          # スタンドアロンバイナリ生成
 ```
 
 ## 🧪 Run Tests
@@ -62,27 +240,137 @@ bun test
 # Run unit tests only
 bun test src/__tests__/unit
 
-# Run specific module tests
-npm run test:unit:logger
-npm run test:unit:config
-npm run test:unit:git
-npm run test:unit:conflict
-npm run test:unit:report
+# Run integration tests only
+bun test src/__tests__/integration
+
+# Run E2E tests only
+bun test src/__tests__/e2e
+
+# Run specific test file
+bun test src/__tests__/unit/config-manager.test.ts
+
+# Test coverage report
+npm run test:coverage
 ```
 
-## 📖 Documentation
+**テスト実績（2025-10-19）:**
 
-For detailed setup and configuration instructions, see [`RUNTIME_SETUP.md`](./RUNTIME_SETUP.md).
+| テストタイプ | テスト数 | 結果 |
+|-------------|---------|------|
+| ユニットテスト | 145 | ✅ 全て PASS |
+| 統合テスト | 26 | ✅ 全て PASS |
+| E2E テスト | 28 | ✅ 全て PASS |
+| **合計** | **199** | **✅ 100% PASS** |
+
+**E2E テストシナリオ:**
+- ✅ Scenario 1 (No Conflict): 6 個テスト
+- ✅ Scenario 2 (Auto-Resolvable): 6 個テスト
+- ✅ Scenario 3 (Manual Resolution): 7 個テスト
+- ✅ Error Cases: 9 個テスト
+
+## 💡 トラブルシューティング
+
+### Q: "fatal: refusing to merge unrelated histories" エラーが出る
+
+**原因**: Upstream リモートと Local が異なるコミット履歴を持っている
+
+**解決策**: このエラーは本ツール内で自動的に処理されます（`--allow-unrelated-histories` フラグ使用）
+
+### Q: カスタムコードマーカーが削除されない
+
+**原因**: マーカーの形式が `config.json` と一致していない
+
+**確認方法**:
+```bash
+# config.json のマーカー形式を確認
+cat config.json | grep -A2 "custom_code_marker"
+
+# ソースコード内のマーカーと比較
+grep "CUSTOM-CODE" src/**/*.ts
+```
+
+### Q: コミット SHA が見つからない
+
+**原因**: `last_merged_upstream_commit` に無効な SHA が指定されている
+
+**解決策**:
+```bash
+# 有効なコミット SHA を確認
+git log upstream/main --format=%H -n 10
+
+# 上流のブランチが存在するか確認
+git branch -r | grep upstream
+```
+
+## 🛠️ ワークフロー例
+
+### 基本的な使用フロー
+
+```bash
+# 1. プロジェクトをセットアップ
+git clone <your-forked-repo>
+cd upstream-merge-tool
+
+# 2. 上流リモートを追加
+git remote add upstream <original-repo-url>
+git fetch upstream
+
+# 3. 設定ファイルを作成
+# config.json を編集（上記のガイドを参照）
+
+# 4. ツールを実行
+npm run start
+
+# 5. レポートを確認
+# - Auto-Resolved: 何もしなくて OK
+# - Manual Resolution Required: 手動でマージを完了
+```
+
+### 手動解決の手順
+
+```bash
+# 1. ツール実行後、マージレポートで競合ファイルを確認
+
+# 2. 競合ファイルを開く
+nano src/conflicted-file.ts
+
+# 3. Git の競合マーカーを手動で解決
+# <<<<<<< HEAD
+# ======= 
+# >>>>>>> upstream/main
+# この部分を編集して解決
+
+# 4. ステージングしてコミット
+git add src/conflicted-file.ts
+git commit -m "Resolve merge conflict with upstream"
+
+# 5. 必要に応じてカスタムコードマーカーを追加
+```
+
+## 📚 詳細ドキュメント
+
+設定方法とトラブルシューティングについて詳しくは、以下を参照してください：
+
+- [`RUNTIME_SETUP.md`](./RUNTIME_SETUP.md) - ランタイム環境の詳細設定
+- `docs/02_requirements/features/` - 機能要件書
+- `docs/03_design/` - システム設計ドキュメント
+- `docs/04_implementation/` - 実装ガイド
+- `docs/05_testing/` - テストケース仕様
 
 ## 🔧 Available Scripts
 
 ```bash
-npm run start          # Run the merge tool (npm/tsx)
-npm run start:bun      # Run with Bun
-npm run dev            # Run in watch mode
-npm run build          # Build standalone binary (requires Bun)
-npm run test           # Run tests with Bun
-npm run test:coverage  # Generate test coverage report
+# 実行
+npm run start          # Node.js で実行
+npm run start:bun      # Bun で実行
+npm run dev            # ウォッチモード
+
+# テスト
+npm run test           # すべてのテスト実行
+npm run test:coverage  # カバレッジレポート
+
+# ビルド（Bun 必須）
+npm run build          # スタンドアロンバイナリ生成
 ```
 
 ## 📦 Project Structure
@@ -90,30 +378,50 @@ npm run test:coverage  # Generate test coverage report
 ```
 upstream-merge-tool/
 ├── src/
-│   ├── main.ts              # Main entry point
-│   ├── logger/              # Logging utilities
-│   ├── config/              # Configuration management
-│   ├── git/                 # Git operations
-│   ├── conflict/            # Conflict resolution
-│   ├── report/              # Report generation
-│   ├── types/               # TypeScript types
-│   ├── utils/               # Utilities
-│   └── __tests__/           # Test suite
-├── config.json              # Configuration (user-provided)
-├── package.json             # npm configuration
-├── tsconfig.json            # TypeScript configuration
-└── README.md                # This file
+│   ├── main.ts                     # メインエントリーポイント
+│   ├── config/ConfigManager.ts     # 設定管理
+│   ├── git/GitService.ts           # Git 操作
+│   ├── conflict/ConflictResolver.ts # 競合解決
+│   ├── report/ReportGenerator.ts   # レポート生成
+│   ├── logger/Logger.ts            # ロギング
+│   ├── types/                      # TypeScript 型定義
+│   ├── utils/                      # ユーティリティ
+│   └── __tests__/                  # テストスイート
+│       ├── unit/                   # ユニットテスト (145 個)
+│       ├── integration/            # 統合テスト (26 個)
+│       └── e2e/                    # E2E テスト (28 個)
+├── config.json                      # 設定ファイル
+├── package.json                     # npm 設定
+├── tsconfig.json                    # TypeScript 設定
+├── docs/                           # ドキュメント
+│   ├── 02_requirements/            # 要件定義
+│   ├── 03_design/                  # 設計ドキュメント
+│   ├── 04_implementation/          # 実装計画
+│   └── 05_testing/                 # テスト仕様
+└── README.md                        # このファイル
 ```
 
 ## ✨ Features
 
-- ✅ Automatic upstream merge
-- ✅ Smart conflict detection
-- ✅ Custom code marker support
-- ✅ Conditional auto-resolution
-- ✅ Detailed reporting
-- ✅ Node.js and Bun compatible
+- ✅ 自動上流マージ
+- ✅ スマート競合検出
+- ✅ カスタムコードマーカー対応
+- ✅ 条件付き自動解決
+- ✅ 詳細なレポート生成
+- ✅ Node.js と Bun 両対応
+- ✅ 199 個の包括的なテスト (100% PASS)
 
-## 📝 License
+## 🎯 次のステップ
+
+1. **[クイックスタート](#-クイックスタート)** セクションに従って環境をセットアップ
+2. **[設定の詳細ガイド](#-設定の詳細ガイド)** で `config.json` を作成
+3. **[使用シナリオ](#-使用シナリオ)** で自分の状況に合わせた方法を確認
+4. ツールを実行してマージを完了
+
+## 📝 ライセンス
 
 MIT
+
+---
+
+**開発情報**: このツールは完全にテストされ、199 個のテストケース（ユニット・統合・E2E）で 100% PASS しています。

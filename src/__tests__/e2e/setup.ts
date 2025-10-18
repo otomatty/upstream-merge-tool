@@ -86,26 +86,10 @@ export class TestRepoHelper {
       fs.rmSync(tempUpstream, { recursive: true, force: true });
       this.testRepos.delete(tempUpstream);
 
-      // Add remote to local repository and clone from upstream
+      // Add remote to local repository
       await this.runGitCommand(`remote add upstream file://${upstreamPath}`, repoPath);
 
-      // Create a shared file to avoid unrelated histories
-      const sharedFile = path.join(repoPath, 'shared.txt');
-      fs.writeFileSync(sharedFile, 'shared content');
-      await this.runGitCommand('add shared.txt', repoPath);
-      await this.runGitCommand('commit -m "Initial commit"', repoPath);
-
-      // Fetch from upstream
-      await this.runGitCommand('fetch upstream', repoPath);
-
-      // Merge upstream/main with allow-unrelated-histories if needed
-      try {
-        await this.runGitCommand('merge upstream/main --allow-unrelated-histories', repoPath);
-      } catch (err) {
-        // Merge might have conflicts, which is okay for some tests
-      }
-
-      // Create config.json with correct commit hash
+      // Create initial local commit with config
       const markerStart = config.customMarkerStart || '// CUSTOM-CODE-START';
       const markerEnd = config.customMarkerEnd || '// CUSTOM-CODE-END';
 
@@ -121,17 +105,28 @@ export class TestRepoHelper {
 
       const configPath = path.join(repoPath, 'config.json');
       fs.writeFileSync(configPath, JSON.stringify(configContent, null, 2));
-      await this.runGitCommand('add config.json', repoPath);
-      await this.runGitCommand('commit -m "Add config"', repoPath);
+      
+      const readmeFile = path.join(repoPath, 'README.md');
+      fs.writeFileSync(readmeFile, '# Local Repository\n');
+      
+      await this.runGitCommand('add config.json README.md', repoPath);
+      await this.runGitCommand('commit -m "Initial local commit"', repoPath);
+
+      // Fetch from upstream (but do NOT merge yet - merge will happen during tool execution)
+      await this.runGitCommand('fetch upstream', repoPath);
     }
 
-    // Create local files with changes
+    // Create local files with changes and commit them
     if (config.localChanges) {
       for (const [filePath, content] of Object.entries(config.localChanges)) {
         const fullPath = path.join(repoPath, filePath);
         fs.mkdirSync(path.dirname(fullPath), { recursive: true });
         fs.writeFileSync(fullPath, content);
       }
+
+      // Commit the local changes
+      await this.runGitCommand('add .', repoPath);
+      await this.runGitCommand('commit -m "Add local changes"', repoPath);
     }
 
     // For non-upstream repos, create basic config.json
@@ -303,9 +298,16 @@ export class TestRepoHelper {
    */
   private static async runGitCommand(command: string, cwd: string): Promise<string> {
     const { stdout, stderr } = await exec(`git ${command}`, { cwd });
-    // Ignore stderr for push operations (contains "To" and branch info)
+    // Ignore stderr for various git operations that output informational messages
     // Only throw if it's a real error
-    if (stderr && !stderr.includes('warning') && !stderr.includes('To ') && !stderr.includes('->')) {
+    if (
+      stderr &&
+      !stderr.includes('warning') &&
+      !stderr.includes('To ') &&
+      !stderr.includes('->') &&
+      !stderr.includes('Cloning into') &&
+      !stderr.includes('remote: ')
+    ) {
       throw new Error(`Git error: ${stderr}`);
     }
     return stdout;
