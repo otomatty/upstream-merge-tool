@@ -1,0 +1,57 @@
+{
+  "name": "upstream-merge-tool",
+  "version": "1.0.0",
+  "description": "Automatically merge upstream changes while preserving custom code",
+  "module": "src/main.ts",
+  "type": "module",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0",
+    "yarn": ">=3.0.0"
+  },
+  "scripts": {
+    "start:bun": "bun run ./index.ts",
+    "start": "tsx src/main.ts",
+    "dev": "tsx --watch src/main.ts",
+    "build": "bun build ./src/main.ts --compile --outfile ./bin/merge-tool",
+    "build:macos": "bun build ./src/main.ts --compile --outfile ./bin/merge-tool --target=bun-darwin-x64",
+    "build:windows": "bun build ./src/main.ts --compile --outfile ./bin/merge-tool.exe --target=bun-windows-x64",
+    "build:linux": "bun build ./src/main.ts --compile --outfile ./bin/merge-tool --target=bun-linux-x64",
+    "build:all": "bun run build:macos && bun run build:windows && bun run build:linux",
+    "test": "bun test",
+    "test:bun": "bun test",
+    "test:node": "tsx node_modules/.bin/vitest",
+    "test:unit": "bun test src/__tests__/unit",
+    "test:unit:logger": "bun test src/__tests__/unit/logger.test.ts",
+    "test:unit:config": "bun test src/__tests__/unit/config-manager.test.ts",
+    "test:unit:git": "bun test src/__tests__/unit/git-service.test.ts",
+    "test:unit:conflict": "bun test src/__tests__/unit/conflict-resolver.test.ts",
+    "test:unit:report": "bun test src/__tests__/unit/report-generator.test.ts",
+    "test:integration": "bun test src/__tests__/integration",
+    "test:integration:config-git": "bun test src/__tests__/integration/config-to-git.test.ts",
+    "test:integration:git-resolver": "bun test src/__tests__/integration/git-to-resolver.test.ts",
+    "test:integration:resolver-report": "bun test src/__tests__/integration/resolver-to-report.test.ts",
+    "test:e2e": "bun test src/__tests__/e2e",
+    "test:e2e:no-conflict": "bun test src/__tests__/e2e/scenario-no-conflict.test.ts",
+    "test:e2e:auto-resolve": "bun test src/__tests__/e2e/scenario-auto-resolve.test.ts",
+    "test:e2e:manual-resolve": "bun test src/__tests__/e2e/scenario-manual-resolve.test.ts",
+    "test:e2e:errors": "bun test src/__tests__/e2e/error-cases.test.ts",
+    "test:all": "bun test src/__tests__",
+    "test:coverage": "bun test --coverage"
+  },
+  "keywords": [
+    "git",
+    "merge",
+    "upstream",
+    "automation",
+    "conflict-resolution"
+  ],
+  "devDependencies": {
+    "@types/bun": "latest",
+    "tsx": "^4.20.6",
+    "typescript": "^5.3.0"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  }
+}
