@@ -37,6 +37,35 @@ export function registerGitHandlers(mainWindow: BrowserWindow | null) {
     }
   });
 
+  ipcMain.handle('git:checkout', async (_event, branchName: string): Promise<void> => {
+    try {
+      logger.info(`Checking out branch: ${branchName}`);
+      mainWindow?.webContents.send('git:progress', {
+        type: 'checkout',
+        status: 'started',
+        message: `Checking out branch: ${branchName}...`,
+      });
+
+      await gitService.checkout(branchName);
+
+      mainWindow?.webContents.send('git:progress', {
+        type: 'checkout',
+        status: 'completed',
+        message: `Successfully checked out branch: ${branchName}`,
+      });
+
+      logger.info(`Checkout completed for branch: ${branchName}`);
+    } catch (error) {
+      logger.error(`Checkout failed: ${error}`);
+      mainWindow?.webContents.send('git:progress', {
+        type: 'checkout',
+        status: 'error',
+        message: `Checkout failed: ${error}`,
+      });
+      throw error;
+    }
+  });
+
   ipcMain.handle('git:merge', async (_event, remote: string, branch: string): Promise<MergeResult> => {
     try {
       logger.info(`Starting merge: ${remote}/${branch}`);

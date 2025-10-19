@@ -77,6 +77,26 @@ export class GitService {
   }
 
   /**
+   * Checkout a branch
+   */
+  async checkout(branchName: string): Promise<void> {
+    try {
+      this.logger.info(`Checking out branch: ${branchName}`);
+      const result = await this.exec(`git checkout ${branchName}`);
+
+      if (result.exitCode !== 0) {
+        throw new Error(`Git checkout failed: ${result.stderr}`);
+      }
+
+      this.logger.info(`Successfully checked out branch: ${branchName}`);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      this.logger.error(`Checkout operation failed: ${errorMessage}`);
+      throw error;
+    }
+  }
+
+  /**
    * Get git repository status
    */
   async getStatus(): Promise<GitStatus> {

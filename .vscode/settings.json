@@ -23,5 +23,10 @@
 		"editor.formatOnSave": true,
 		"editor.insertSpaces": false,
 		"editor.tabSize": 4
+	},
+	"chat.mcp.serverSampling": {
+		"upstream-merge-tool/.vscode/mcp.json: shadcn": {
+			"allowedModels": ["copilot/gpt-5-mini"]
+		}
 	}
 }
