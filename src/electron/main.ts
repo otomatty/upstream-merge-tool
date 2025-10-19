@@ -21,10 +21,8 @@ function createWindow() {
     },
   });
 
-  const startUrl = isDev
-    ? 'http://localhost:5173'
-    : `file://${path.join(__dirname, '../renderer/index.html')}`;
-
+  // Load HTML file from webpack build output (both dev and production)
+  const startUrl = `file://${path.join(__dirname, '../renderer/index.html')}`;
   mainWindow.loadURL(startUrl);
 
   if (isDev) {
