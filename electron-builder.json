@@ -1,0 +1,25 @@
+{
+  "appId": "com.example.upstream-merge-tool",
+  "productName": "Upstream Merge Tool",
+  "directories": {
+    "output": "release",
+    "buildResources": "public"
+  },
+  "files": [
+    "dist/**/*",
+    "package.json"
+  ],
+  "mac": {
+    "target": ["dmg", "zip"],
+    "category": "public.app-category.utilities",
+    "icon": "public/icon.png"
+  },
+  "win": {
+    "target": ["nsis", "portable"],
+    "icon": "public/icon.png"
+  },
+  "linux": {
+    "target": ["AppImage", "deb"],
+    "icon": "public/icon.png"
+  }
+}
