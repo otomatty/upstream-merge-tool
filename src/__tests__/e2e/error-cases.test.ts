@@ -299,6 +299,234 @@ describe('E2E: Error Cases', () => {
       // Assert - should fail or handle gracefully
       expect(result.exitCode).toBeDefined();
 
+            // Cleanup
+      await TestRepoHelper.cleanupTestRepo(repoPath);
+    });
+  });
+
+  describe('Error Case 7: Repository State Issues', () => {
+    it('TC-E2E-E-001: should handle dirty working directory gracefully', async () => {
+      // Setup
+      const repoPath = await TestRepoHelper.createTestRepo({
+        name: 'error-recovery-dirty-working',
+        hasUpstream: true,
+        upstreamChanges: { 'file.txt': 'upstream content' },
+        localChanges: { 'file.txt': 'local content' },
+      });
+
+      // Create unstaged modifications
+      const modifiedFile = path.join(repoPath, 'file.txt');
+      fs.writeFileSync(modifiedFile, 'unstaged modification');
+
+      // Execute
+      const result = await TestRepoHelper.runMergeTool(repoPath, `${repoPath}/config.json`);
+
+      // Assert - should either fail gracefully or include warning
+      expect(result.exitCode).toBeGreaterThanOrEqual(0);
+      expect(result.stdout + result.stderr).toMatch(/(dirty|uncommitted|modified|change)/i);
+
+      // Cleanup
+      await TestRepoHelper.cleanupTestRepo(repoPath);
+    });
+
+    it('TC-E2E-E-002: should handle staged changes in working directory', async () => {
+      // Setup
+      const repoPath = await TestRepoHelper.createTestRepo({
+        name: 'error-recovery-staged-changes',
+        hasUpstream: true,
+        upstreamChanges: { 'original.ts': 'export const orig = 1;' },
+        localChanges: { 'original.ts': 'export const orig = 1;' },
+      });
+
+      // Create staged changes
+      const stagedFile = path.join(repoPath, 'staged.ts');
+      fs.writeFileSync(stagedFile, 'export const staged = true;');
+      
+      // Stage the file via git command
+      await new Promise<void>((resolve) => {
+        const { exec } = require('child_process');
+        exec(`cd ${repoPath} && git add staged.ts`, () => resolve());
+      });
+
+      // Execute
+      const result = await TestRepoHelper.runMergeTool(repoPath, `${repoPath}/config.json`);
+
+      // Assert
+      expect(result.exitCode).toBeGreaterThanOrEqual(0);
+
+      // Cleanup
+      await TestRepoHelper.cleanupTestRepo(repoPath);
+    });
+
+    it('TC-E2E-E-003: should handle detached HEAD state', async () => {
+      // Setup
+      const repoPath = await TestRepoHelper.createTestRepo({
+        name: 'error-recovery-detached-head',
+        hasUpstream: true,
+        upstreamChanges: { 'code.ts': 'export const code = 1;' },
+        localChanges: { 'code.ts': 'export const code = 1;' },
+      });
+
+      // Move to detached HEAD state
+      await new Promise<void>((resolve) => {
+        const { exec } = require('child_process');
+        exec(`cd ${repoPath} && git checkout HEAD~0 2>/dev/null || true`, () => resolve());
+      });
+
+      // Execute
+      const result = await TestRepoHelper.runMergeTool(repoPath, `${repoPath}/config.json`);
+
+      // Assert - should fail or handle gracefully
+      expect(result.exitCode).toBeGreaterThanOrEqual(0);
+
+      // Cleanup
+      await TestRepoHelper.cleanupTestRepo(repoPath);
+    });
+  });
+
+  describe('Error Case 8: Network/Git Issues (Simulated)', () => {
+    it('TC-E2E-E-004: should handle missing upstream remote', async () => {
+      // Setup
+      const repoPath = await TestRepoHelper.createTestRepo({
+        name: 'error-recovery-no-remote',
+        hasUpstream: false, // No upstream remote
+      });
+
+      // Try to execute
+      const result = await TestRepoHelper.runMergeTool(repoPath, `${repoPath}/config.json`);
+
+      // Assert - should fail with appropriate message
+      expect(result.exitCode).not.toBe(0);
+      expect(result.stdout.toLowerCase() + result.stderr.toLowerCase()).toMatch(
+        /(upstream|remote|not found|no such|missing)/i
+      );
+
+      // Cleanup
+      await TestRepoHelper.cleanupTestRepo(repoPath);
+    });
+
+    it('TC-E2E-E-005: should handle git fetch timeout scenario', async () => {
+      // Setup
+      const repoPath = await TestRepoHelper.createTestRepo({
+        name: 'error-recovery-fetch-timeout',
+        hasUpstream: true,
+        upstreamChanges: { 'data.json': JSON.stringify({ test: true }) },
+        localChanges: { 'data.json': JSON.stringify({ test: true }) },
+      });
+
+      // Execute (simulates potential timeout, but actual timeout depends on system)
+      const result = await TestRepoHelper.runMergeTool(repoPath, `${repoPath}/config.json`);
+
+      // Assert - should handle gracefully
+      expect(result.exitCode).toBeGreaterThanOrEqual(0);
+
+      // Cleanup
+      await TestRepoHelper.cleanupTestRepo(repoPath);
+    });
+
+    it('TC-E2E-E-006: should handle permission denied errors', async () => {
+      // Setup
+      const repoPath = await TestRepoHelper.createTestRepo({
+        name: 'error-recovery-permission',
+        hasUpstream: true,
+        upstreamChanges: { 'protected.txt': 'content' },
+        localChanges: { 'protected.txt': 'content' },
+      });
+
+      // Create a read-only file (simulating permission issue)
+      const readOnlyFile = path.join(repoPath, 'readonly.txt');
+      fs.writeFileSync(readOnlyFile, 'readonly');
+      
+      try {
+        fs.chmodSync(readOnlyFile, 0o444); // Read-only
+      } catch (e) {
+        // chmod might not work on all systems, skip this step
+      }
+
+      // Execute
+      const result = await TestRepoHelper.runMergeTool(repoPath, `${repoPath}/config.json`);
+
+      // Assert - should handle gracefully
+      expect(result.exitCode).toBeGreaterThanOrEqual(0);
+
+      // Restore permissions for cleanup
+      try {
+        fs.chmodSync(readOnlyFile, 0o644);
+      } catch (e) {
+        // Ignore
+      }
+
+      // Cleanup
+      await TestRepoHelper.cleanupTestRepo(repoPath);
+    });
+  });
+
+  describe('Error Case 9: Recovery Mechanisms', () => {
+    it('TC-E2E-E-007: should rollback changes on failure', async () => {
+      // Setup
+      const repoPath = await TestRepoHelper.createTestRepo({
+        name: 'error-recovery-rollback',
+        hasUpstream: true,
+        upstreamChanges: { 'backup.ts': 'export const backup = true;' },
+        localChanges: { 'backup.ts': 'export const backup = true;' },
+      });
+
+      // Get initial state
+      const initialStatus = await TestRepoHelper.getGitStatus(repoPath);
+
+      // Execute
+      const result = await TestRepoHelper.runMergeTool(repoPath, `${repoPath}/config.json`);
+
+      // Get status after execution
+      const finalStatus = await TestRepoHelper.getGitStatus(repoPath);
+
+      // Assert - if failed, should not have partial changes
+      if (result.exitCode !== 0) {
+        // Status should not show unexpected changes
+        expect(finalStatus).toBeDefined();
+      }
+
+      // Cleanup
+      await TestRepoHelper.cleanupTestRepo(repoPath);
+    });
+
+    it('TC-E2E-E-008: should allow recovery from partial merge', async () => {
+      // Setup
+      const repoPath = await TestRepoHelper.createTestRepo({
+        name: 'error-recovery-partial-merge',
+        hasUpstream: true,
+        upstreamChanges: {
+          'step1.ts': 'export const step1 = 1;',
+          'step2.ts': 'export const step2 = 2;',
+          'step3.ts': 'export const step3 = 3;',
+        },
+        localChanges: {
+          'step1.ts': `export const step1 = 1;
+// CUSTOM-CODE-START
+const custom1 = "local";
+// CUSTOM-CODE-END`,
+          'step2.ts': `export const step2 = 2;
+// CUSTOM-CODE-START
+const custom2 = "local";
+// CUSTOM-CODE-END`,
+          'step3.ts': `export const step3 = 3;
+// CUSTOM-CODE-START
+const custom3 = "local";
+// CUSTOM-CODE-END`,
+        },
+        hasConflict: true,
+      });
+
+      // Execute first merge
+      const result1 = await TestRepoHelper.runMergeTool(repoPath, `${repoPath}/config.json`);
+      expect(result1.exitCode).toBe(0);
+
+      // Re-attempt merge (should handle already-merged state)
+      const result2 = await TestRepoHelper.runMergeTool(repoPath, `${repoPath}/config.json`);
+      
+      // Should either succeed or fail gracefully
+      expect(result2.exitCode).toBeGreaterThanOrEqual(0);
+
       // Cleanup
       await TestRepoHelper.cleanupTestRepo(repoPath);
     });

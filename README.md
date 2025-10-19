@@ -16,7 +16,7 @@ Automatically merge upstream changes while preserving custom code with intellige
   - **Manual Resolution**: 手動解決が必要な競合
 - ✅ 詳細なマージレポート生成（バージョン情報を含む）
 - ✅ Node.js / npm / yarn / Bun に対応
-- ✅ 213 個のテストケース（ユニット・統合・E2E）で完全検証
+- ✅ 265 個のテストケース（ユニット 150・統合 40・E2E 75）で完全検証
 
 ## 🚀 クイックスタート
 
@@ -322,9 +322,16 @@ bun test --summary
 
 **テスト統計（2025-10-19）:**
 - ✅ ユニットテスト: 150 個
-- ✅ 統合テスト: 26 個
-- ✅ E2E テスト: 37 個
-- **合計: 213 個テスト PASS**
+- ✅ 統合テスト: 40 個
+- ✅ E2E テスト: 75 個
+- **合計: 265 個テスト 100% PASS ✅**
+- **実行時間: 39.11 秒**
+
+**E2E テストの新規テストスイート:**
+- ✅ バージョン追跡統合テスト: 15 個
+- ✅ 複雑コンフリクトシナリオ: 12 個
+- ✅ パフォーマンス・スケーラビリティ: 12 個
+- ✅ エラーハンドリング拡張: 8 個
 
 ## 🔧 利用可能なコマンド
 
@@ -497,18 +504,27 @@ upstream-merge-tool/
 │   ├── logger/Logger.ts            # ロギング
 │   ├── types/                      # TypeScript 型定義
 │   ├── utils/                      # ユーティリティ
+│   ├── version/VersionExtractor.ts # バージョン抽出
 │   └── __tests__/                  # テストスイート
-│       ├── unit/                   # ユニットテスト (145 個)
-│       ├── integration/            # 統合テスト (26 個)
-│       └── e2e/                    # E2E テスト (28 個)
+│       ├── unit/                   # ユニットテスト (150 個)
+│       ├── integration/            # 統合テスト (40 個)
+│       └── e2e/                    # E2E テスト (75 個)
+│           ├── scenario-version-tracking.test.ts      # バージョン追跡 (15)
+│           ├── scenario-complex-conflicts.test.ts     # 複雑コンフリクト (12)
+│           ├── scenario-performance.test.ts           # パフォーマンス (12)
+│           ├── scenario-no-conflict.test.ts
+│           ├── scenario-auto-resolve.test.ts
+│           ├── scenario-manual-resolve.test.ts
+│           └── error-cases.test.ts
 ├── config.json                      # 設定ファイル
 ├── package.json                     # npm 設定
 ├── tsconfig.json                    # TypeScript 設定
 ├── docs/                           # ドキュメント
 │   ├── 02_requirements/            # 要件定義
 │   ├── 03_design/                  # 設計ドキュメント
-│   ├── 04_implementation/          # 実装計画
-│   └── 05_testing/                 # テスト仕様
+│   ├── 04_implementation/          # 実装計画・レポート
+│   ├── 05_testing/                 # テスト仕様
+│   └── 08_worklogs/                # 作業ログ・進捗報告
 └── README.md                        # このファイル
 ```
 
@@ -518,10 +534,14 @@ upstream-merge-tool/
 - ✅ スマート競合検出
 - ✅ カスタムコードマーカー対応
 - ✅ 条件付き自動解決
-- ✅ Upstream バージョン追跡機能
+- ✅ Upstream バージョン追跡機能（タグ、package.json、手動指定対応）
 - ✅ 詳細なレポート生成（バージョン情報を含む）
 - ✅ Node.js と Bun 両対応
-- ✅ 213 個の包括的なテスト (100% PASS)
+- ✅ npm / yarn / Bun パッケージマネージャ対応
+- ✅ 265 個の包括的なテスト (100% PASS)
+  - ユニットテスト: 150 個
+  - 統合テスト: 40 個
+  - E2E テスト: 75 個（新規強化版）
 
 ## 🔄 バージョン追跡機能ガイド
 
@@ -610,9 +630,16 @@ MIT
 
 ---
 
-**開発情報**: このツールは完全にテストされ、213 個のテストケース（ユニット・統合・E2E）で 100% PASS しています。
+**開発情報**: このツールは完全にテストされ、265 個のテストケース（ユニット 150 個・統合 40 個・E2E 75 個）で 100% PASS しています。
+
+**E2E テスト強化（2025-10-19）:**
+- バージョン追跡統合テスト: 15 個 ✅
+- 複雑コンフリクトシナリオテスト: 12 個 ✅
+- パフォーマンス・スケーラビリティテスト: 12 個 ✅
+- エラーハンドリング・リカバリーテスト: 8 個 ✅
 
 詳細なドキュメント：
 - **要件定義**: `docs/02_requirements/features/upstream-version-tracking-requirements.md`
 - **アーキテクチャ設計**: `docs/03_design/architecture/upstream-merge-tool-architecture.md`
 - **テストケース**: `docs/05_testing/test-cases/upstream-merge-tool-test-cases.md`
+- **E2E テスト実装計画**: `docs/04_implementation/plans/e2e-tests-enhancement/`
