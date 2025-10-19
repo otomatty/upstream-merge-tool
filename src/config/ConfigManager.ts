@@ -72,10 +72,41 @@ export class ConfigManager {
       }
     }
 
+    // Validate version tracking configuration (optional)
+    if (config.upstream_version_tracking) {
+      const versionErrors = this.validateVersionTracking(config.upstream_version_tracking);
+      errors.push(...versionErrors);
+    }
+
     return {
       isValid: errors.length === 0,
       errors,
     };
+  }
+
+  /**
+   * Validate version tracking configuration
+   */
+  private validateVersionTracking(versionTracking: any): string[] {
+    const errors: string[] = [];
+
+    if (typeof versionTracking !== 'object' || versionTracking === null) {
+      return ['upstream_version_tracking must be an object'];
+    }
+
+    if (typeof versionTracking.enabled !== 'boolean') {
+      errors.push('upstream_version_tracking.enabled must be a boolean');
+    }
+
+    if (versionTracking.type && !['tag', 'package', 'manual'].includes(versionTracking.type)) {
+      errors.push("upstream_version_tracking.type must be 'tag', 'package', or 'manual'");
+    }
+
+    if (versionTracking.type === 'manual' && !versionTracking.value) {
+      errors.push("upstream_version_tracking.value is required when type is 'manual'");
+    }
+
+    return errors;
   }
 
   /**

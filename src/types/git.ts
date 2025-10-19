@@ -1,3 +1,11 @@
+// Version information extracted from upstream repository
+export interface VersionInfo {
+  version: string;
+  source: "tag" | "package" | "manual" | "commit";
+  isValid: boolean;
+  error?: string;
+}
+
 // Git merge result
 export interface MergeResult {
   success: boolean;

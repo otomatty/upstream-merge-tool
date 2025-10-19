@@ -1,6 +1,7 @@
 import { Logger } from './logger/Logger';
 import { ConfigManager } from './config/ConfigManager';
 import { GitService } from './git/GitService';
+import { VersionExtractor } from './version/VersionExtractor';
 import { ConflictResolver } from './conflict/ConflictResolver';
 import { ReportGenerator } from './report/ReportGenerator';
 import { readFileAsText } from './utils/runtime';
@@ -43,6 +44,24 @@ async function main(): Promise<void> {
     // Step 3: Fetch from upstream
     logger.info('Fetching from upstream repository...');
     await gitService.fetch(config.upstream_repository_name);
+
+    // Step 3.5: Extract version information from upstream
+    let currentVersion = '';
+    let versionSource = '';
+    const versionExtractor = new VersionExtractor(logger);
+    const versionInfo = await versionExtractor.extractVersion(
+      config.upstream_repository_name,
+      config.upstream_branch_name,
+      config.upstream_version_tracking
+    );
+
+    if (versionInfo.isValid) {
+      currentVersion = versionInfo.version;
+      versionSource = versionInfo.source;
+      logger.info(`Current upstream version: ${currentVersion} (source: ${versionSource})`);
+    } else if (versionInfo.error) {
+      logger.warn(`Failed to extract version: ${versionInfo.error}`);
+    }
 
     // Step 4: Attempt merge
     logger.info(
@@ -166,6 +185,9 @@ async function main(): Promise<void> {
       autoResolvedFiles,
       manualRequiredFiles,
       success: manualRequiredFiles.length === 0 && mergeResult.success,
+      previousVersion: config.last_merged_upstream_version,
+      currentVersion: currentVersion || undefined,
+      versionSource: versionSource || undefined,
     };
 
     const summary = reportGenerator.generateCLISummary(reportData);

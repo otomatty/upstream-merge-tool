@@ -335,4 +335,113 @@ describe('ConfigManager - Unit Tests', () => {
       expect(result.isValid).toBe(false);
     });
   });
+
+  describe(describeWithId('TC-CFG-VERS-001', 'バージョン追跡設定の検証'), () => {
+    it('should accept valid version tracking config with type tag', () => {
+      const config = {
+        ...testFixtures.validConfig,
+        upstream_version_tracking: {
+          enabled: true,
+          type: 'tag' as const,
+        },
+      };
+
+      const result = configManager.validateConfig(config);
+
+      expect(result.isValid).toBe(true);
+    });
+
+    it('should accept valid version tracking config with type package', () => {
+      const config = {
+        ...testFixtures.validConfig,
+        upstream_version_tracking: {
+          enabled: true,
+          type: 'package' as const,
+        },
+      };
+
+      const result = configManager.validateConfig(config);
+
+      expect(result.isValid).toBe(true);
+    });
+
+    it('should accept valid version tracking config with type manual', () => {
+      const config = {
+        ...testFixtures.validConfig,
+        upstream_version_tracking: {
+          enabled: true,
+          type: 'manual' as const,
+          value: 'v1.2.3',
+        },
+      };
+
+      const result = configManager.validateConfig(config);
+
+      expect(result.isValid).toBe(true);
+    });
+
+    it('should reject manual type without value', () => {
+      const config = {
+        ...testFixtures.validConfig,
+        upstream_version_tracking: {
+          enabled: true,
+          type: 'manual' as const,
+        },
+      };
+
+      const result = configManager.validateConfig(config);
+
+      expect(result.isValid).toBe(false);
+      expect(result.errors.some((e) => e.includes('manual'))).toBe(true);
+    });
+
+    it('should reject invalid type', () => {
+      const config = {
+        ...testFixtures.validConfig,
+        upstream_version_tracking: {
+          enabled: true,
+          type: 'invalid' as any,
+        },
+      };
+
+      const result = configManager.validateConfig(config as any);
+
+      expect(result.isValid).toBe(false);
+      expect(result.errors.some((e) => e.includes('type'))).toBe(true);
+    });
+
+    it('should accept config without version tracking (optional)', () => {
+      const config = {
+        ...testFixtures.validConfig,
+      };
+
+      const result = configManager.validateConfig(config);
+
+      expect(result.isValid).toBe(true);
+    });
+
+    it('should accept config with version tracking disabled', () => {
+      const config = {
+        ...testFixtures.validConfig,
+        upstream_version_tracking: {
+          enabled: false,
+        },
+      };
+
+      const result = configManager.validateConfig(config);
+
+      expect(result.isValid).toBe(true);
+    });
+
+    it('should accept config with previous version field', () => {
+      const config = {
+        ...testFixtures.validConfig,
+        last_merged_upstream_version: 'v1.0.0',
+      };
+
+      const result = configManager.validateConfig(config);
+
+      expect(result.isValid).toBe(true);
+    });
+  });
 });

@@ -9,13 +9,14 @@ Automatically merge upstream changes while preserving custom code with intellige
 **主な特徴：**
 - ✅ 自動競合検出と条件付き自動解決
 - ✅ カスタムコードマーカー（`// CUSTOM-CODE-START` ～ `// CUSTOM-CODE-END`）対応
+- ✅ Upstream バージョン追跡機能（タグ、package.json、手動指定に対応）
 - ✅ 3 つのシナリオに対応：
   - **No Conflict**: 競合なしの通常マージ
   - **Auto-Resolvable**: 自動解決可能な競合
   - **Manual Resolution**: 手動解決が必要な競合
-- ✅ 詳細なマージレポート生成
+- ✅ 詳細なマージレポート生成（バージョン情報を含む）
 - ✅ Node.js / npm / yarn / Bun に対応
-- ✅ 199 個のテストケース（ユニット・統合・E2E）で完全検証
+- ✅ 213 個のテストケース（ユニット・統合・E2E）で完全検証
 
 ## 🚀 クイックスタート
 
@@ -62,8 +63,35 @@ bun install
 | `upstream_repository_name` | 上流リポジトリのリモート名 | `upstream` |
 | `upstream_branch_name` | 上流ブランチ名 | `main` または `master` |
 | `last_merged_upstream_commit` | 最後にマージした上流コミット SHA | `a1b2c3d...` (40 文字) |
+| `last_merged_upstream_version` | 最後にマージした上流バージョン（オプション） | `v1.2.3` |
+| `upstream_version_tracking` | バージョン追跡設定（オプション） | 下記参照 |
 | `custom_code_marker.start` | カスタムコード開始マーカー | `// CUSTOM-CODE-START` |
 | `custom_code_marker.end` | カスタムコード終了マーカー | `// CUSTOM-CODE-END` |
+
+#### バージョン追跡設定（オプション）
+
+バージョン情報を追跡することで、より分かりやすいマージレポートが生成されます：
+
+```json
+{
+  "upstream_version_tracking": {
+    "enabled": true,
+    "type": "tag",
+    "value": "v*"
+  }
+}
+```
+
+**バージョン追跡タイプ：**
+
+- **`tag`**: Git タグから最新のセマンティックバージョンを自動取得（推奨）
+- **`package`**: Upstream の `package.json` から version フィールドを取得
+- **`manual`**: 手動で指定したバージョン文字列を使用
+
+**フォールバック動作：**
+- Primary 方式が失敗した場合、他の方法を自動的に試行
+- すべての方法が失敗した場合は、コミット ID にフォールバック
+- バージョン追跡がエラーになっても、マージ処理は継続
 
 ### 3. ツールの実行
 
@@ -122,6 +150,89 @@ export function initialize() {
   console.log('Initializing...');
 }
 ```
+
+### バージョン追跡の設定例
+
+#### 例 1: Git タグを使用（推奨）
+
+```json
+{
+  "upstream_repository_name": "upstream",
+  "upstream_branch_name": "main",
+  "last_merged_upstream_commit": "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0",
+  "last_merged_upstream_version": "v1.2.0",
+  "upstream_version_tracking": {
+    "enabled": true,
+    "type": "tag"
+  },
+  "custom_code_marker": {
+    "start": "// CUSTOM-CODE-START",
+    "end": "// CUSTOM-CODE-END"
+  }
+}
+```
+
+**結果：** マージレポートに「v1.2.0 → v1.3.0」のように表示
+
+#### 例 2: package.json から自動取得
+
+```json
+{
+  "upstream_repository_name": "upstream",
+  "upstream_branch_name": "main",
+  "last_merged_upstream_commit": "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0",
+  "upstream_version_tracking": {
+    "enabled": true,
+    "type": "package"
+  },
+  "custom_code_marker": {
+    "start": "// CUSTOM-CODE-START",
+    "end": "// CUSTOM-CODE-END"
+  }
+}
+```
+
+**結果：** Upstream の package.json から version フィールドを自動抽出
+
+#### 例 3: 手動指定
+
+```json
+{
+  "upstream_repository_name": "upstream",
+  "upstream_branch_name": "main",
+  "last_merged_upstream_commit": "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0",
+  "upstream_version_tracking": {
+    "enabled": true,
+    "type": "manual",
+    "value": "release-2025-10-19"
+  },
+  "custom_code_marker": {
+    "start": "// CUSTOM-CODE-START",
+    "end": "// CUSTOM-CODE-END"
+  }
+}
+```
+
+**結果：** 指定したバージョン文字列をそのまま使用
+
+#### 例 4: バージョン追跡を無効化（従来の動作）
+
+```json
+{
+  "upstream_repository_name": "upstream",
+  "upstream_branch_name": "main",
+  "last_merged_upstream_commit": "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0",
+  "upstream_version_tracking": {
+    "enabled": false
+  },
+  "custom_code_marker": {
+    "start": "// CUSTOM-CODE-START",
+    "end": "// CUSTOM-CODE-END"
+  }
+}
+```
+
+**結果：** バージョン情報は使用されず、既存のコミット ID ベースで動作
 
 ## 🎯 使用シナリオ
 
@@ -210,10 +321,10 @@ bun test --summary
 ```
 
 **テスト統計（2025-10-19）:**
-- ✅ ユニットテスト: 145 個
+- ✅ ユニットテスト: 150 個
 - ✅ 統合テスト: 26 個
-- ✅ E2E テスト: 28 個
-- **合計: 199 個テスト PASS**
+- ✅ E2E テスト: 37 個
+- **合計: 213 個テスト PASS**
 
 ## 🔧 利用可能なコマンド
 
@@ -407,16 +518,91 @@ upstream-merge-tool/
 - ✅ スマート競合検出
 - ✅ カスタムコードマーカー対応
 - ✅ 条件付き自動解決
-- ✅ 詳細なレポート生成
+- ✅ Upstream バージョン追跡機能
+- ✅ 詳細なレポート生成（バージョン情報を含む）
 - ✅ Node.js と Bun 両対応
-- ✅ 199 個の包括的なテスト (100% PASS)
+- ✅ 213 個の包括的なテスト (100% PASS)
+
+## 🔄 バージョン追跡機能ガイド
+
+### バージョン追跡とは
+
+上流リポジトリのバージョン情報を自動的に取得・追跡することで、マージレポートにバージョン情報を含めることができます。これにより「v1.2.0 から v1.3.0 へのマージ」のようにユーザーにとってわかりやすいレポートが生成されます。
+
+### 動作仕様
+
+#### 優先順位
+
+1. **タグから取得**: Git タグの中から最新のセマンティックバージョン（v1.2.3 形式）を自動抽出
+2. **package.json から取得**: Upstream リポジトリの `package.json` ファイルから version フィールドを抽出
+3. **手動指定**: 設定ファイルで直接指定したバージョン文字列を使用
+4. **フォールバック**: すべての方法が失敗した場合、既存のコミット ID を使用
+
+#### 失敗耐性
+
+- バージョン取得がエラーになっても、**マージ処理は継続**
+- 警告ログを出力し、コミット ID を代替として使用
+- バージョン追跡設定がなくても、**後方互換性を保証**（既存の config.json はそのまま使用可能）
+
+### マージレポート例
+
+バージョン追跡を有効にした場合、レポート出力に以下のようにバージョン情報が含まれます：
+
+```
+============================================================
+UPSTREAM MERGE TOOL REPORT
+============================================================
+Execution Time: 2025-10-19T00:14:02.089Z
+Duration: 2s
+Status: ✓ SUCCESS
+
+VERSION INFORMATION:
+------------------------------------------------------------
+Previous Version: v1.2.0
+Current Version: v1.3.0
+Source: tag
+
+CONFLICT SUMMARY:
+------------------------------------------------------------
+Total Conflicts: 0
+Auto-Resolved: 0
+Manual Required: 0
+
+============================================================
+```
+
+### トラブルシューティング
+
+#### バージョン取得が失敗する場合
+
+```bash
+# Git タグの確認
+git tag -l | grep "v"
+
+# 特定のリモートのタグを確認
+git ls-remote --tags upstream | grep "v"
+
+# package.json の確認
+git show upstream/main:package.json | jq '.version'
+```
+
+#### バージョン追跡を一時的に無効化
+
+```json
+{
+  "upstream_version_tracking": {
+    "enabled": false
+  }
+}
+```
 
 ## 🎯 次のステップ
 
 1. **[クイックスタート](#-クイックスタート)** セクションに従って環境をセットアップ
 2. **[設定の詳細ガイド](#-設定の詳細ガイド)** で `config.json` を作成
-3. **[使用シナリオ](#-使用シナリオ)** で自分の状況に合わせた方法を確認
-4. ツールを実行してマージを完了
+3. **[バージョン追跡機能ガイド](#-バージョン追跡機能ガイド)** でバージョン情報の設定を検討
+4. **[使用シナリオ](#-使用シナリオ)** で自分の状況に合わせた方法を確認
+5. ツールを実行してマージを完了
 
 ## 📝 ライセンス
 
@@ -424,4 +610,9 @@ MIT
 
 ---
 
-**開発情報**: このツールは完全にテストされ、199 個のテストケース（ユニット・統合・E2E）で 100% PASS しています。
+**開発情報**: このツールは完全にテストされ、213 個のテストケース（ユニット・統合・E2E）で 100% PASS しています。
+
+詳細なドキュメント：
+- **要件定義**: `docs/02_requirements/features/upstream-version-tracking-requirements.md`
+- **アーキテクチャ設計**: `docs/03_design/architecture/upstream-merge-tool-architecture.md`
+- **テストケース**: `docs/05_testing/test-cases/upstream-merge-tool-test-cases.md`

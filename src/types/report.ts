@@ -10,4 +10,7 @@ export interface ReportData {
   autoResolvedFiles: string[];
   manualRequiredFiles: string[];
   success: boolean;
+  previousVersion?: string;
+  currentVersion?: string;
+  versionSource?: string;
 }

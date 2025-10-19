@@ -25,6 +25,23 @@ export class ReportGenerator {
     summary += 'Execution Time: ' + this.formatTimestamp(data.startTime) + '\n';
     summary += 'Duration: ' + executionTime + 's\n';
     summary += 'Status: ' + (data.success ? '✓ SUCCESS' : '✗ FAILURE') + '\n';
+
+    // Add version information if available
+    if (data.previousVersion || data.currentVersion) {
+      summary += '\n';
+      summary += 'VERSION INFORMATION:\n';
+      summary += '-'.repeat(60) + '\n';
+      if (data.previousVersion) {
+        summary += 'Previous Version: ' + data.previousVersion + '\n';
+      }
+      if (data.currentVersion) {
+        summary += 'Current Version: ' + data.currentVersion + '\n';
+      }
+      if (data.versionSource) {
+        summary += 'Source: ' + data.versionSource + '\n';
+      }
+    }
+
     summary += '\n';
     summary += 'CONFLICT SUMMARY:\n';
     summary += '-'.repeat(60) + '\n';
@@ -75,7 +92,23 @@ export class ReportGenerator {
       content += 'End Time: ' + this.formatTimestamp(data.endTime) + '\n';
       content += 'Duration: ' + Math.round((data.endTime.getTime() - data.startTime.getTime()) / 1000) + 's\n';
       content += 'Status: ' + (data.success ? 'SUCCESS' : 'FAILURE') + '\n';
-      content += '\n';
+
+      // Add version information if available
+      if (data.previousVersion || data.currentVersion) {
+        content += '\n';
+        content += 'VERSION INFORMATION:\n';
+        content += '-'.repeat(80) + '\n';
+        if (data.previousVersion) {
+          content += 'Previous Version: ' + data.previousVersion + '\n';
+        }
+        if (data.currentVersion) {
+          content += 'Current Version: ' + data.currentVersion + '\n';
+        }
+        if (data.versionSource) {
+          content += 'Source: ' + data.versionSource + '\n';
+        }
+        content += '\n';
+      }
 
       content += 'CONFLICT SUMMARY:\n';
       content += '-'.repeat(80) + '\n';
