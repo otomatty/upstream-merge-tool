@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useState } from 'react';
 import ConfigPage from './pages/ConfigPage';
 import MergePage from './pages/MergePage';
@@ -10,7 +10,7 @@ export default function App() {
   const [currentStep, setCurrentStep] = useState<'config' | 'merge' | 'conflict' | 'report'>('config');
 
   return (
-    <BrowserRouter>
+    <HashRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <div className="flex flex-col h-screen bg-gray-50">
         <div className="flex-1 overflow-auto">
           <Routes>
@@ -35,6 +35,6 @@ export default function App() {
         </div>
         <StatusBar currentStep={currentStep} />
       </div>
-    </BrowserRouter>
+    </HashRouter>
   );
 }

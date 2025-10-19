@@ -7,6 +7,9 @@ type ElectronAPI = {
     load: (configPath: string) => Promise<ConfigType>;
     save: (configPath: string, config: ConfigType) => Promise<void>;
     validate: (config: Partial<ConfigType>) => Promise<{ isValid: boolean; errors: string[] }>;
+    setDefaultPath: (configPath: string) => Promise<void>;
+    getDefaultPath: () => Promise<string | null>;
+    clearDefault: () => Promise<void>;
   };
   git: {
     fetch: (remote: string) => Promise<void>;
@@ -25,6 +28,9 @@ type ElectronAPI = {
     getSummary: () => Promise<ReportSummary>;
     getDetails: () => Promise<string>;
   };
+  file: {
+    openFile: (options: any) => Promise<{ canceled: boolean; filePaths: string[] }>;
+  };
 };
 
 const electronAPI: ElectronAPI = {
@@ -32,6 +38,9 @@ const electronAPI: ElectronAPI = {
     load: (configPath) => ipcRenderer.invoke('config:load', configPath),
     save: (configPath, config) => ipcRenderer.invoke('config:save', configPath, config),
     validate: (config) => ipcRenderer.invoke('config:validate', config),
+    setDefaultPath: (configPath) => ipcRenderer.invoke('config:setDefaultPath', configPath),
+    getDefaultPath: () => ipcRenderer.invoke('config:getDefaultPath'),
+    clearDefault: () => ipcRenderer.invoke('config:clearDefault'),
   },
   git: {
     fetch: (remote) => ipcRenderer.invoke('git:fetch', remote),
@@ -51,6 +60,9 @@ const electronAPI: ElectronAPI = {
   report: {
     getSummary: () => ipcRenderer.invoke('report:getSummary'),
     getDetails: () => ipcRenderer.invoke('report:getDetails'),
+  },
+  file: {
+    openFile: (options) => ipcRenderer.invoke('file:openFile', options),
   },
 };
 

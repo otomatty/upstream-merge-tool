@@ -53,11 +53,7 @@ export default [
     output: {
       path: path.resolve(__dirname, 'dist/electron'),
       filename: 'preload.js',
-      module: true,
-      chunkFormat: 'module',
-    },
-    experiments: {
-      outputModule: true,
+      libraryTarget: 'commonjs2',
     },
     module: {
       rules: [

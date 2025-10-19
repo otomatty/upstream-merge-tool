@@ -1,0 +1,14 @@
+{
+  "upstream_repository_name": "upstream/test-repo",
+  "upstream_branch_name": "main",
+  "last_merged_upstream_commit": "1234567890abcdef1234567890abcdef12345678",
+  "custom_code_marker": {
+    "start": "## BEGIN CUSTOM CODE SECTION",
+    "end": "## END CUSTOM CODE SECTION"
+  },
+  "upstream_version_tracking": {
+    "enabled": true,
+    "type": "tag",
+    "value": "v1.0.0"
+  }
+}

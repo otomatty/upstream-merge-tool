@@ -5,6 +5,7 @@ import { registerConfigHandlers } from './ipc/configHandlers';
 import { registerGitHandlers } from './ipc/gitHandlers';
 import { registerConflictHandlers } from './ipc/conflictHandlers';
 import { registerReportHandlers } from './ipc/reportHandlers';
+import { registerFileHandlers } from './ipc/fileHandlers';
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -74,6 +75,7 @@ app.on('ready', () => {
   registerGitHandlers(mainWindow);
   registerConflictHandlers();
   registerReportHandlers();
+  registerFileHandlers(mainWindow);
 });
 
 app.on('window-all-closed', () => {
