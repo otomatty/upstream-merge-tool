@@ -1,6 +1,7 @@
 import { ChevronLeft, ChevronRight, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { Container } from "@/components/ui/container";
 import type { ConfigType, MergeResult } from "../../shared/types/ipc";
 
 interface StepNavigatorProps {
@@ -138,7 +139,7 @@ export default function StepNavigator({
 
 	return (
 		<div className="border-t border-border bg-background">
-			<div className="px-6 py-4">
+			<Container maxWidth="7xl" px="lg" py="md">
 				{/* Steps Container */}
 				<div className="flex items-center justify-between mb-6">
 					{STEPS.map((step, index) => {
@@ -222,7 +223,7 @@ export default function StepNavigator({
 						<ChevronRight size={18} />
 					</Button>
 				</div>
-			</div>
+			</Container>
 		</div>
 	);
 }

@@ -45,7 +45,10 @@ export default function MergeOptions({
 					{config ? (
 						<div className="space-y-3">
 							<div>
-								<label htmlFor={repoNameId} className="block text-sm font-medium text-gray-700 mb-1">
+								<label
+									htmlFor={repoNameId}
+									className="block text-sm font-medium text-gray-700 mb-1"
+								>
 									Repository Name
 								</label>
 								<input
@@ -57,7 +60,10 @@ export default function MergeOptions({
 								/>
 							</div>
 							<div>
-								<label htmlFor={lastMergeId} className="block text-sm font-medium text-gray-700 mb-1">
+								<label
+									htmlFor={lastMergeId}
+									className="block text-sm font-medium text-gray-700 mb-1"
+								>
 									Last Merged Commit
 								</label>
 								<input
@@ -69,7 +75,10 @@ export default function MergeOptions({
 								/>
 							</div>
 							<div>
-								<label htmlFor={mergeTargetId} className="block text-sm font-medium text-gray-700 mb-1">
+								<label
+									htmlFor={mergeTargetId}
+									className="block text-sm font-medium text-gray-700 mb-1"
+								>
 									Merge Destination Branch
 								</label>
 								<input
@@ -93,7 +102,10 @@ export default function MergeOptions({
 					<h3 className="text-lg font-medium mb-4">Merge Target</h3>
 					<div className="space-y-3">
 						<div>
-							<label htmlFor={remoteSelectId} className="block text-sm font-medium text-gray-700 mb-1">
+							<label
+								htmlFor={remoteSelectId}
+								className="block text-sm font-medium text-gray-700 mb-1"
+							>
 								Remote
 							</label>
 							<select
@@ -110,7 +122,10 @@ export default function MergeOptions({
 						</div>
 
 						<div>
-							<label htmlFor={branchInputId} className="block text-sm font-medium text-gray-700 mb-1">
+							<label
+								htmlFor={branchInputId}
+								className="block text-sm font-medium text-gray-700 mb-1"
+							>
 								Branch
 							</label>
 							<input

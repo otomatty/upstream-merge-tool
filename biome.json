@@ -1,0 +1,26 @@
+{
+	"$schema": "https://biomejs.dev/schemas/2.2.6/schema.json",
+	"linter": {
+		"enabled": true,
+		"rules": {
+			"recommended": true,
+			"style": {
+				"useNodejsImportProtocol": "error"
+			}
+		}
+	},
+	"formatter": {
+		"enabled": true,
+		"indentWidth": 2,
+		"indentStyle": "tab"
+	},
+	"files": {
+		"maxSize": 10485760,
+		"includes": ["src/", "index.ts"]
+	},
+	"javascript": {
+		"formatter": {
+			"trailingCommas": "es5"
+		}
+	}
+}

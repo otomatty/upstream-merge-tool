@@ -13,6 +13,7 @@ import ConflictPage from "./pages/ConflictPage";
 import ReportPage from "./pages/ReportPage";
 import StepNavigator from "./components/StepNavigator";
 import AppHeader from "./components/AppHeader/AppHeader";
+import { Container } from "@/components/ui/container";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { LanguageProvider } from "./contexts/LanguageContext";
 
@@ -78,7 +79,13 @@ function AppContent() {
 	return (
 		<div className="flex flex-col h-screen bg-gray-50 dark:bg-gray-900">
 			<AppHeader currentPage={currentStep} />
-			<div className="flex-1 overflow-auto">
+			<Container
+				as="main"
+				maxWidth="7xl"
+				px="lg"
+				py="md"
+				className="flex-1 overflow-auto"
+			>
 				<Routes>
 					<Route path="/" element={<Navigate to="/config" />} />
 					<Route
@@ -113,7 +120,7 @@ function AppContent() {
 						element={<ReportPage mergeResult={mergeResult} config={config} />}
 					/>
 				</Routes>
-			</div>
+			</Container>
 			<StepNavigator
 				currentStep={currentStep}
 				config={config}
